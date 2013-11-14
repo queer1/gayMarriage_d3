@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Same Sex Marriage</title>
+  <script src="d3.v3.js"></script>
+  <style>
+
+    body {
+      font: 18px sans-serif;
+      width: 960px;
+      text-align: center;
+    }
+    
+    .button {
+
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .bar {
+      fill: steelblue;
+    }
+
+  </style>
+</head>
+
+<body>
+  <h2>Legal Recognition of Same Sex Relationships in the US</h2>
+  <div id='graph'></div>
+  <button class="switch" id="clustered">Clustered</button>
+  <button class="switch" id="stacked">Stacked</button>
+  
+  <p>Data from <a href="http://en.wikipedia.org/wiki/Same-sex_unions_in_the_United_States"> wikipedia</a> and the <a href= "http://www.census.gov/popest/data/historical/index.html">US Census Bureau</a>.</p>
+  
+  
+  <script>
+  
+    var dataSet;
+    var statusNames;
+  
+    var margin = {top: 20, right: 20, bottom: 30, left: 60},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom,
+        legendX = 45,
+        legendY = 20;
+        
+    var formatPercent = d3.format(".0%");
+    
+    var x0 = d3.scale.ordinal()
+        .rangeRoundBands([0, width], .1);
+        
+    var x1 = d3.scale.ordinal();
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+        
+    var color = d3.scale.ordinal().range(["teal", "purple"]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x0)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        .tickFormat(formatPercent);
+        
+    var svg = d3.select("div").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+   
+    switchTo = function(graph) {
+      d3.selectAll('.data')
+          .remove();
+          
+      if (graph == "clustered") {
+        clustered();
+      } else {
+        stacked();
+      };
+    }
+   
+    setListeners = function() {
+      d3.selectAll(".switch").on("click", function(d) {
+        var id;
+        d3.event.preventDefault();
+        id = d3.select(this).attr("id");
+        return switchTo(id);
+      });
+    }
+
+    prepGraph = function() {
+      
+      x0.domain(dataSet.map(function(d) { return d.year; }));
+      x1.domain(statusNames).rangeRoundBands([0, x0.rangeBand()]);
+      y.domain([0, d3.max(dataSet, function(d) { return d.total; })]);
+      
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+      
+      svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("US Population");
+        
+      
+      var legend = svg.selectAll(".legend")
+          .data(statusNames.slice())
+        .enter().append("g")
+          .attr("class", "legend")
+          .attr("transform", function(d,i) { return "translate(0, " + i * 20 +  ")"; });
+          
+      legend.append("rect")
+          .attr("x", legendX)
+          .attr("y", legendY)
+          .attr("width", 18)
+          .attr("height", 18)
+          .style("fill", color);
+
+      legend.append("text")
+          .attr("x", legendX + 20)
+          .attr("y", legendY + 9)
+          .attr("dy", ".35em")
+          .text(function(d) { return d; });
+      
+    }
+    
+    stacked = function() {
+      var year = svg.selectAll(".year")
+          .data(dataSet)
+        .enter().append("g")
+          .attr("class", "g")
+          .attr('transform', function(d) {return "translate(" + x0(d.year) + ", 0)"});
+          
+      year.selectAll("rect")
+          .data(function(d) { return d.statuses; })
+        .enter().append("rect")
+          .attr("width", x0.rangeBand())
+          .attr("y", function(d) { return y(d.y1); })
+          .attr("height", function(d) { return y(d.y0) - y(d.y1); })
+          .attr("fill", function(d) { return color(d.name); })
+          .attr("class", "data");  
+    }
+    
+    clustered = function() {
+      var year = svg.selectAll(".year")
+          .data(dataSet)
+        .enter().append("g")
+          .attr("class", "g")
+          .attr('transform', function(d) {return "translate(" + x0(d.year) + ", 0)"});
+          
+      year.selectAll("rect")
+          .data(function(d) { return d.statuses})
+        .enter().append("rect")
+          .attr("width", x1.rangeBand())
+          .attr("x", function(d) { return x1(d.name); })
+          .attr("y", function(d) { return y(d.value); })
+          .attr("height", function(d) { return height- y(d.value); })
+          .attr("fill", function(d) { return color(d.name); })
+          .attr("class", "data");  
+    }
+    
+    loadData = function() { 
+      d3.csv("percentage.csv", function(data){
+        statusNames = d3.keys(data[0]).filter(function(key) { return key != "year" });    
+        data.forEach(function(d) {
+          var y0 = 0;
+          d.statuses = statusNames.map(function(name) { 
+            return {name: name, y0: y0, y1: y0 += +d[name], value: +d[name]} 
+          });
+          
+          d.total = d.statuses[statusNames.length - 1].y1;            
+        });
+      dataSet = data; 
+      prepGraph();
+      setListeners();
+      clustered(); 
+
+      });  
+    };
+    
+    loadData();
+  </script>
+</body>
+</html>
