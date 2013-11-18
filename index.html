@@ -5,18 +5,19 @@
   <meta charset="utf-8">
   <title>Same Sex Marriage</title>
   <script src="d3.v3.js"></script>
+  <script src="http://d3js.org/queue.v1.min.js"></script>
   <style>
 
     body {
-      font: 18px sans-serif;
-      width: 960px;
+      font: 12px sans-serif;
+      width: 600px;
       text-align: center;
+      margin: auto;
     }
     
-    .button {
-
+    path {
+      stroke: #fff;
     }
-
     .axis path,
     .axis line {
       fill: none;
@@ -27,6 +28,10 @@
     .bar {
       fill: steelblue;
     }
+    
+    .data:hover {
+      cursor: pointer;
+    }
 
   </style>
 </head>
@@ -36,6 +41,9 @@
   <div id='graph'></div>
   <button class="switch" id="clustered">Clustered</button>
   <button class="switch" id="stacked">Stacked</button>
+  <h3 id="mapTitle"></h3>
+  <div id='map'></div>
+  
   
   <p>Data from <a href="http://en.wikipedia.org/wiki/Same-sex_unions_in_the_United_States"> wikipedia</a> and the <a href= "http://www.census.gov/popest/data/historical/index.html">US Census Bureau</a>.</p>
   
@@ -44,10 +52,12 @@
   
     var dataSet;
     var statusNames;
+    var laws;
+    var us;
   
     var margin = {top: 20, right: 20, bottom: 30, left: 60},
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom,
+        width = 600 - margin.left - margin.right,
+        height = 300 - margin.top - margin.bottom,
         legendX = 45,
         legendY = 20;
         
@@ -72,16 +82,28 @@
         .orient("left")
         .tickFormat(formatPercent);
         
+    var projection = d3.geo.albersUsa()
+        .scale(450)
+        .translate([260, 100]);
+
+    var path = d3.geo.path()
+        .projection(projection);
+        
     var svg = d3.select("div").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
       .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+    var map = d3.select("#map").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+
    
     switchTo = function(graph) {
       d3.selectAll('.data')
           .remove();
-          
       if (graph == "clustered") {
         clustered();
       } else {
@@ -97,7 +119,7 @@
         return switchTo(id);
       });
     }
-
+    
     prepGraph = function() {
       
       x0.domain(dataSet.map(function(d) { return d.year; }));
@@ -141,12 +163,13 @@
       
     }
     
-    stacked = function() {
+    var stacked = function() {
       var year = svg.selectAll(".year")
           .data(dataSet)
         .enter().append("g")
-          .attr("class", "g")
-          .attr('transform', function(d) {return "translate(" + x0(d.year) + ", 0)"});
+          .attr("class", "data")
+          .attr('transform', function(d) {return "translate(" + x0(d.year) + ", 0)"})
+          .on("click", function(d) { drawMap(d.year )});
           
       year.selectAll("rect")
           .data(function(d) { return d.statuses; })
@@ -158,12 +181,13 @@
           .attr("class", "data");  
     }
     
-    clustered = function() {
+    var clustered = function() {
       var year = svg.selectAll(".year")
           .data(dataSet)
         .enter().append("g")
-          .attr("class", "g")
-          .attr('transform', function(d) {return "translate(" + x0(d.year) + ", 0)"});
+          .attr("class", "data")
+          .attr('transform', function(d) {return "translate(" + x0(d.year) + ", 0)"})
+          .on("click", function(d) { drawMap(d.year )});
           
       year.selectAll("rect")
           .data(function(d) { return d.statuses})
@@ -172,30 +196,60 @@
           .attr("x", function(d) { return x1(d.name); })
           .attr("y", function(d) { return y(d.value); })
           .attr("height", function(d) { return height- y(d.value); })
-          .attr("fill", function(d) { return color(d.name); })
-          .attr("class", "data");  
+          .attr("fill", function(d) { return color(d.name); });  
     }
     
-    loadData = function() { 
-      d3.csv("percentage.csv", function(data){
-        statusNames = d3.keys(data[0]).filter(function(key) { return key != "year" });    
-        data.forEach(function(d) {
-          var y0 = 0;
-          d.statuses = statusNames.map(function(name) { 
-            return {name: name, y0: y0, y1: y0 += +d[name], value: +d[name]} 
+    var drawMap = function(year) {
+      map.selectAll("path")
+          .remove();
+      
+      d3.select("#mapTitle").text("Year: " + year)
+
+      map.selectAll("path")
+          .data(us.features)
+        .enter().append("path")
+          .attr("d", path)
+          .attr("fill", function(d){
+            if(laws[year][d.properties.NAME] === "C"){
+              return "teal";
+            } else if(laws[year][d.properties.NAME] === "M"){
+              return "purple";
+            } else {
+              return "grey"
+            }
           });
           
-          d.total = d.statuses[statusNames.length - 1].y1;            
+          map
+
+    }
+    
+    var loadData= function(error, data, laws_in, us_in) { 
+      statusNames = d3.keys(data[0]).filter(function(key) { return key != "year" });    
+      data.forEach(function(d) {
+        var y0 = 0;
+        d.statuses = statusNames.map(function(name) { 
+          return {name: name, y0: y0, y1: y0 += +d[name], value: +d[name]} 
         });
+        
+        d.total = d.statuses[statusNames.length - 1].y1;            
+      });
+      
       dataSet = data; 
+      laws = laws_in;
+      us = us_in;
+      
       prepGraph();
       setListeners();
       clustered(); 
-
-      });  
+      drawMap(2000);
     };
     
-    loadData();
+    queue()
+        .defer(d3.csv, "percentage.csv")
+        .defer(d3.json, "laws.json")
+        .defer(d3.json, "us-states2.json")
+        .await(loadData);
+
   </script>
 </body>
 </html>
