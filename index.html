@@ -44,7 +44,7 @@
   <h3 id="mapTitle"></h3>
   <div id='map'></div>
   
-  
+  <h4>Click the bars to see the map for a given year.</h4>
   <p>Data from <a href="http://en.wikipedia.org/wiki/Same-sex_unions_in_the_United_States"> wikipedia</a> and the <a href= "http://www.census.gov/popest/data/historical/index.html">US Census Bureau</a>.</p>
   
   
@@ -139,7 +139,7 @@
           .attr("y", 6)
           .attr("dy", ".71em")
           .style("text-anchor", "end")
-          .text("US Population");
+          .text("Population Living in States Allowing");
         
       
       var legend = svg.selectAll(".legend")
@@ -218,9 +218,6 @@
               return "grey"
             }
           });
-          
-          map
-
     }
     
     var loadData= function(error, data, laws_in, us_in) { 
