@@ -32,6 +32,14 @@
     .data:hover {
       cursor: pointer;
     }
+    
+    .x text:hover {
+      cursor: pointer;
+    }
+
+    .tick text {
+      color: blue;
+    }
 
   </style>
 </head>
@@ -39,12 +47,13 @@
 <body>
   <h2>Legal Recognition of Same Sex Relationships in the US</h2>
   <div id='graph'></div>
+  <h4>Click the bars to see the map for a given year.</h4>
   <button class="switch" id="clustered">Clustered</button>
   <button class="switch" id="stacked">Stacked</button>
   <h3 id="mapTitle"></h3>
   <div id='map'></div>
   
-  <h4>Click the bars to see the map for a given year.</h4>
+  
   <p>Data from <a href="http://en.wikipedia.org/wiki/Same-sex_unions_in_the_United_States"> wikipedia</a> and the <a href= "http://www.census.gov/popest/data/historical/index.html">US Census Bureau</a>.</p>
   
   
@@ -160,6 +169,10 @@
           .attr("y", legendY + 9)
           .attr("dy", ".35em")
           .text(function(d) { return d; });
+          
+      d3.selectAll(".x text")
+          .data(dataSet)
+          .on("click", function(d) {drawMap(d.year)});
       
     }
     
@@ -167,9 +180,9 @@
       var year = svg.selectAll(".year")
           .data(dataSet)
         .enter().append("g")
-          .attr("class", "data")
+          .attr("class", function(d) {return "data " + d.year} )
           .attr('transform', function(d) {return "translate(" + x0(d.year) + ", 0)"})
-          .on("click", function(d) { drawMap(d.year )});
+          .on("click", function(d) { drawMap(d.year)});
           
       year.selectAll("rect")
           .data(function(d) { return d.statuses; })
