@@ -5,7 +5,8 @@
   <meta charset="utf-8">
   <title>Same Sex Marriage</title>
   <script src="d3.v3.js"></script>
-  <script src="http://d3js.org/queue.v1.min.js"></script>
+  <script src="queue.min.js" ></script>
+
   <style>
 
     body {
@@ -172,6 +173,7 @@
           
       d3.selectAll(".x text")
           .data(dataSet)
+          .attr('id', function(d) { return "tick" + d.year })
           .on("click", function(d) {drawMap(d.year)});
       
     }
@@ -216,6 +218,9 @@
       map.selectAll("path")
           .remove();
       
+      svg.selectAll(".x text")
+        .attr('font-weight', "normal")
+      
       d3.select("#mapTitle").text("Year: " + year)
 
       map.selectAll("path")
@@ -231,6 +236,8 @@
               return "grey"
             }
           });
+      svg.select("#tick"+ year)
+          .attr("font-weight", "bold");
     }
     
     var loadData= function(error, data, laws_in, us_in) { 
