@@ -1,21 +1,23 @@
-
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Same Sex Marriage</title>
-  <script src="d3.v3.js"></script>
-  <script src="queue.min.js" ></script>
-
-  <style>
+  <head>
+    <meta charset="utf-8">
+    <title>
+      Same Sex Marriage
+    </title>
+    <script src="d3.v3.js" type="text/javascript">
+</script>
+    <script src="queue.min.js" type="text/javascript">
+</script>
+    <style type="text/css">
 
     body {
-      font: 12px sans-serif;
+      font: 13px sans-serif;
       width: 600px;
       text-align: center;
       margin: auto;
     }
-    
+
     path {
       stroke: #fff;
     }
@@ -29,11 +31,11 @@
     .bar {
       fill: steelblue;
     }
-    
+
     .data:hover {
       cursor: pointer;
     }
-    
+
     .x text:hover {
       cursor: pointer;
     }
@@ -42,29 +44,33 @@
       color: blue;
     }
 
-  </style>
-</head>
+    </style>
+  </head>
+  <body>
+    <h2>
+      Legal Recognition of Same Sex Relationships in the US
+    </h2>
+    <div id='graph'></div>
+    <h4>
+      Click the bars to see the map for a given year.
+    </h4>
+    <p>
+      <button class="switch" id="clustered">Clustered</button> <button class="switch" id="stacked">Stacked</button>
+    </p>
+    <h3 id="mapTitle"></h3>
+    <div id='map'></div>
+    <p>
+      Data from <a href="http://en.wikipedia.org/wiki/Same-sex_unions_in_the_United_States">wikipedia</a> and the <a href="http://www.census.gov/popest/data/historical/index.html">US Census Bureau</a>.
+    </p>
+    <p>
+      <a href="https://github.com/rmalecky/gayMarriage_d3g"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+    </p><script type="text/javascript">
 
-<body>
-  <h2>Legal Recognition of Same Sex Relationships in the US</h2>
-  <div id='graph'></div>
-  <h4>Click the bars to see the map for a given year.</h4>
-  <button class="switch" id="clustered">Clustered</button>
-  <button class="switch" id="stacked">Stacked</button>
-  <h3 id="mapTitle"></h3>
-  <div id='map'></div>
-  
-  
-  <p>Data from <a href="http://en.wikipedia.org/wiki/Same-sex_unions_in_the_United_States"> wikipedia</a> and the <a href= "http://www.census.gov/popest/data/historical/index.html">US Census Bureau</a>.</p>
-  
-  
-  <script>
-  
     var dataSet;
     var statusNames;
     var laws;
     var us;
-  
+
     var margin = {top: 20, right: 20, bottom: 30, left: 60},
         width = 600 - margin.left - margin.right,
         height = 300 - margin.top - margin.bottom,
@@ -72,7 +78,7 @@
         legendY = 20;
         
     var formatPercent = d3.format(".0%");
-    
+
     var x0 = d3.scale.ordinal()
         .rangeRoundBands([0, width], .1);
         
@@ -110,7 +116,7 @@
         .attr("height", height);
 
 
-   
+
     switchTo = function(graph) {
       d3.selectAll('.data')
           .remove();
@@ -120,7 +126,7 @@
         stacked();
       };
     }
-   
+
     setListeners = function() {
       d3.selectAll(".switch").on("click", function(d) {
         var id;
@@ -129,7 +135,7 @@
         return switchTo(id);
       });
     }
-    
+
     prepGraph = function() {
       
       x0.domain(dataSet.map(function(d) { return d.year; }));
@@ -149,7 +155,7 @@
           .attr("y", 6)
           .attr("dy", ".71em")
           .style("text-anchor", "end")
-          .text("Population Living in States Allowing");
+          .text("Population in States Allowing");
         
       
       var legend = svg.selectAll(".legend")
@@ -177,7 +183,7 @@
           .on("click", function(d) {drawMap(d.year)});
       
     }
-    
+
     var stacked = function() {
       var year = svg.selectAll(".year")
           .data(dataSet)
@@ -195,7 +201,7 @@
           .attr("fill", function(d) { return color(d.name); })
           .attr("class", "data");  
     }
-    
+
     var clustered = function() {
       var year = svg.selectAll(".year")
           .data(dataSet)
@@ -213,7 +219,7 @@
           .attr("height", function(d) { return height- y(d.value); })
           .attr("fill", function(d) { return color(d.name); });  
     }
-    
+
     var drawMap = function(year) {
       map.selectAll("path")
           .remove();
@@ -239,7 +245,7 @@
       svg.select("#tick"+ year)
           .attr("font-weight", "bold");
     }
-    
+
     var loadData= function(error, data, laws_in, us_in) { 
       statusNames = d3.keys(data[0]).filter(function(key) { return key != "year" });    
       data.forEach(function(d) {
@@ -260,17 +266,15 @@
       clustered(); 
       drawMap(2000);
     };
-    
+
     queue()
         .defer(d3.csv, "percentage.csv")
         .defer(d3.json, "laws.json")
         .defer(d3.json, "us-states3.json")
         .await(loadData);
 
-  </script>
-  
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    </script><script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
@@ -278,6 +282,6 @@
     ga('create', 'UA-44816300-3', 'rmalecky.github.io');
     ga('send', 'pageview');
 
-  </script>
-</body>
+    </script>
+  </body>
 </html>
